@@ -27,5 +27,16 @@ faceswap/
 switch_states.json
 /models
 install.bat
-/.claude
 *.bat
+!run-*.bat
+!driver/*.bat
+
+# Large binaries (exceeds GitHub 100MB limit)
+ffmpeg.exe
+ffprobe.exe
+*.exe
+
+# Snapshots and temporary captures
+snapshots/
+*.jpg
+*.jpeg

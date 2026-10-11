@@ -116,6 +116,11 @@ def _apply_poisson_blend(swapped_frame: Frame, original_frame: Frame,
                             center = (mx1 + bw // 2, my1 + bh // 2)
                             blended = cv2.seamlessClone(swapped_frame, original_frame,
                                                         mask, center, cv2.NORMAL_CLONE)
+                            # Verify Poisson didn't wash out the swap
+                            diff_s = np.abs(swapped_frame[my1:my2 + 1, mx1:mx2 + 1].astype(np.int32) - original_frame[my1:my2 + 1, mx1:mx2 + 1].astype(np.int32)).sum()
+                            diff_b = np.abs(blended[my1:my2 + 1, mx1:mx2 + 1].astype(np.int32) - original_frame[my1:my2 + 1, mx1:mx2 + 1].astype(np.int32)).sum()
+                            if diff_s > 0 and diff_b < diff_s * 0.4:
+                                return swapped_frame
                             np.copyto(swapped_frame[my1:my2 + 1, mx1:mx2 + 1],
                                       blended[my1:my2 + 1, mx1:mx2 + 1],
                                       where=mask[my1:my2 + 1, mx1:mx2 + 1, None].astype(bool))
@@ -165,6 +170,10 @@ def _apply_poisson_blend(swapped_frame: Frame, original_frame: Frame,
         rx1 = min(w, center_x + radius_x + 1)
         ry0 = max(0, center_y - radius_y)
         ry1 = min(h, center_y + radius_y + 1)
+        diff_s = np.abs(swapped_frame[ry0:ry1, rx0:rx1].astype(np.int32) - original_frame[ry0:ry1, rx0:rx1].astype(np.int32)).sum()
+        diff_b = np.abs(blended[ry0:ry1, rx0:rx1].astype(np.int32) - original_frame[ry0:ry1, rx0:rx1].astype(np.int32)).sum()
+        if diff_s > 0 and diff_b < diff_s * 0.4:
+            return swapped_frame
         roi_mask = mask[ry0:ry1, rx0:rx1]
         np.copyto(swapped_frame[ry0:ry1, rx0:rx1],
                   blended[ry0:ry1, rx0:rx1],
@@ -240,8 +249,7 @@ def get_face_swapper() -> Any:
             # older GPUs (e.g. GTX 16xx) where FP16 can produce NaN.
             fp32_path = os.path.join(models_dir, "inswapper_128.onnx")
             fp16_path = os.path.join(models_dir, "inswapper_128_fp16.onnx")
-            use_fp16 = _HAS_TORCH_CUDA and os.path.exists(fp16_path)
-            if use_fp16:
+            if os.path.exists(fp16_path):
                 model_path = fp16_path
             elif os.path.exists(fp32_path):
                 model_path = fp32_path

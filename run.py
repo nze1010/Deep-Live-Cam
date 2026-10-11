@@ -6,6 +6,7 @@ import sys
 # Add the project root to PATH so bundled ffmpeg/ffprobe are found
 project_root = os.path.dirname(os.path.abspath(__file__))
 os.environ["PATH"] = project_root + os.pathsep + os.environ.get("PATH", "")
+os.environ["NO_ALBUMENTATIONS_UPDATE"] = "1"
 
 # On Windows, register NVIDIA CUDA DLL directories so onnxruntime-gpu can
 # find cuDNN/cublas. Python 3.8+ ignores PATH for extension-module native deps —

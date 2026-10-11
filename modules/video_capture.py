@@ -96,8 +96,11 @@ class VideoCapturer:
             # even when the camera delivers 60.  Measure empirically by
             # timing a burst of frames.
             reported_fps = self.cap.get(cv2.CAP_PROP_FPS)
-            self.actual_fps = self._measure_fps(warmup=10, sample=30,
-                                                fallback=reported_fps or fps)
+            if reported_fps and 15.0 <= reported_fps <= 120.0:
+                self.actual_fps = float(reported_fps)
+            else:
+                self.actual_fps = self._measure_fps(warmup=1, sample=3,
+                                                    fallback=reported_fps or fps)
 
             print(f"[VideoCapturer] {self.actual_width}x{self.actual_height} "
                   f"@ {self.actual_fps:.1f}fps (reported={reported_fps:.0f})",
@@ -132,7 +135,7 @@ class VideoCapturer:
             self.is_running = False
             self.cap = None
 
-    def _measure_fps(self, warmup: int = 10, sample: int = 30,
+    def _measure_fps(self, warmup: int = 2, sample: int = 5,
                      fallback: float = 30.0) -> float:
         """Read warmup+sample frames and return measured FPS.
 
